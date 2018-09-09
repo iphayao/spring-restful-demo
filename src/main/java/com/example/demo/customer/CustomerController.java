@@ -4,9 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
+import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/customers")
@@ -21,12 +24,12 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Customer> getCustomer(@PathVariable Long id) {
-        Customer customer = customerService.retrieveCustomer(id);
-        if(customer == null) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity<?> getCustomer(@PathVariable Long id) {
+        Optional<Customer> customer = customerService.retrieveCustomer(id);
+        if(!customer.isPresent()) {
+            return ResponseEntity.notFound().build();
         }
-        return new ResponseEntity<>(customer, HttpStatus.OK);
+        return ResponseEntity.ok(customer);
     }
 
     @GetMapping(params = "name")
@@ -37,27 +40,24 @@ public class CustomerController {
     @PostMapping()
     public ResponseEntity<?> postCustomer(@Valid @RequestBody Customer body) {
         Customer customer = customerService.createCustomer(body);
-        if(customer == null) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-        return new ResponseEntity<>(customer, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(customer);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> putCustomer(@PathVariable Long id, @Valid @RequestBody Customer body) {
-        Customer customer = customerService.updateCustomer(id, body);
-        if(customer == null) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        Optional<Customer> customer = customerService.updateCustomer(id, body);
+        if(!customer.isPresent()) {
+            return ResponseEntity.notFound().build();
         }
-        return new ResponseEntity<>(customer, HttpStatus.OK);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCustomer(@PathVariable Long id) {
         if(!customerService.deleteCustomer(id)) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return ResponseEntity.notFound().build();
         }
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok().build();
     }
 
 }
